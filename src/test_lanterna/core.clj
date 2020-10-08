@@ -2,17 +2,22 @@
   (:refer-clojure :exclude [flush])
   (:import
    com.googlecode.lanterna.TerminalPosition
-   com.googlecode.lanterna.terminal.DefaultTerminalFactory
+   com.googlecode.lanterna.terminal.ansi.UnixTerminal
+   com.googlecode.lanterna.terminal.ansi.CygwinTerminal
    com.googlecode.lanterna.terminal.Terminal)
   (:gen-class))
 
 (set! *warn-on-reflection* true)
 
-(defn ^Terminal text-terminal []
-  (-> (new DefaultTerminalFactory)
-      (.setPreferTerminalEmulator false)
-      (.setForceTextTerminal true)
-      (.createTerminal)))
+(defn windows? []
+  (-> (System/getProperty "os.name" "")
+      (.toLowerCase)
+      (.startsWith "windows")))
+
+(defn text-terminal []
+  (if (windows?)
+    (new CygwinTerminal System/in System/out (java.nio.charset.Charset/forName "UTF8"))
+    (new UnixTerminal System/in System/out (java.nio.charset.Charset/forName "UTF8"))))
 
 (defn start [^Terminal terminal]
   (.enterPrivateMode terminal))
